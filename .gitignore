@@ -1,0 +1,16 @@
+# Local configuration (may contain an API-Football key)
+matchday.conf
+
+# Runtime data written by the bot
+data/
+
+# Temporary folders left by the test suite
+tests/_data_*/
+tests/_live_*/
+
+# Misc
+*.tmp
+*.bak
+*~
+.DS_Store
+Thumbs.db

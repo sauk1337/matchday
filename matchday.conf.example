@@ -1,0 +1,170 @@
+# =========================================================================
+#  Matchday configuration
+#  Copy this file to matchday.conf (same folder) and edit it.
+#  Every setting is optional: the value shown is the built-in default.
+#  Most per-channel options are set from IRC with !mdset, and users tune
+#  their own alerts with !set - you rarely need to touch this file.
+# =========================================================================
+
+# ---- General -------------------------------------------------------------
+
+# Default language for channels and users: en es pt fr it de
+set conf(lang.default)        en
+
+# Default timezone for kick-off times (Region/City). Users/channels can
+# override it (!set tz Europe/Madrid, !mdset tz America/Mexico_City).
+set conf(tz.default)          UTC
+
+# Command prefix for channel commands (each channel can change it).
+set conf(cmd.prefix)          "!"
+
+# Log verbosity: debug info warn error
+set conf(log.level)           info
+
+# Where data files live (users, predictions, state...).
+# set conf(data.dir)          /home/eggdrop/scripts/matchday/data
+set conf(data.save_interval)  120
+
+# Eggdrop flags considered bot admins (!md ...). Global|channel syntax.
+set conf(admin.flags)         m|-
+# Partyline commands (.matchday status, .md replay ...) and their flags
+set conf(dcc.commands)        {matchday md}
+set conf(dcc.flags)           m
+
+# ---- Data sources --------------------------------------------------------
+
+# HTTP transport: auto (tls if available, else curl), tls, curl
+set conf(http.transport)      auto
+set conf(http.timeout)        20
+set conf(http.maxconcurrent)  4
+
+# Optional API-Football (api-sports.io) key. Free plan: 100 req/day.
+#   extras  -> ESPN stays primary, API-Football adds real head-to-head
+#   primary -> API-Football scoreboards for soccer (needs a paid plan)
+set conf(apifootball.key)     ""
+set conf(apifootball.mode)    extras
+
+# Look up unknown team names on ESPN's global search
+set conf(teams.online_search) 1
+
+# ---- Polling -------------------------------------------------------------
+
+# Seconds between polls of a competition with live matches / about to
+# start / idle. The bot sleeps until shortly before the next kick-off.
+set conf(poll.live)           30
+set conf(poll.soon)           60
+set conf(poll.idle)           900
+# Competitions always polled even if no channel/user asks for them
+set conf(leagues.always)      {}
+# Competitions used by commands when a channel has none configured
+set conf(leagues.default)     {esp.1 eng.1 ita.1 ger.1 fra.1 uefa.champions}
+# After a downtime longer than this (s), current scores are absorbed
+# silently instead of being announced as new goals.
+set conf(poll.restore_max_age) 900
+
+# ---- Channels ------------------------------------------------------------
+
+# Defaults for new channels (then: !mdset leagues add laliga, premier)
+set conf(chan.leagues)        {}
+set conf(chan.events)         {goals reds pens start ht ft status alerts hot videos}
+# Hot-match alerts from the channel's competitions only, or from "all"
+# competitions the bot watches (!mdset hotscope all)
+set conf(chan.hotscope)       leagues
+
+# ---- Output --------------------------------------------------------------
+
+# full (colours + bold) | bold | plain ; unicode | ascii symbols
+set conf(out.style)           full
+set conf(out.symbols)         unicode
+# Team names: short ("Man United") or full ("Manchester United")
+set conf(out.names)           short
+# Max bytes per IRC line, lines per burst and per minute per target
+set conf(out.maxbytes)        400
+set conf(out.max_burst)       6
+set conf(out.max_per_minute)  20
+# Merge simultaneous events (e.g. 3+ goals at 15:00) into fewer lines
+set conf(out.join_threshold)  3
+# Lines shown before "!more" in channels / private
+set conf(out.chan_lines)      4
+set conf(out.priv_lines)      12
+# Standings rows shown in compact mode
+set conf(table.compact)       10
+
+# Theme: mIRC colour codes per role (00-15)
+# set conf(theme.goal)        03
+# set conf(theme.red)         04
+# set conf(theme.live)        04
+# set conf(theme.league)      10
+
+# ---- Users ---------------------------------------------------------------
+
+# Private alerts as notice or msg (users can change it: !set delivery msg)
+set conf(users.delivery)      notice
+set conf(users.events)        {goals reds pens start ht ft status alerts reminders hot videos}
+set conf(users.max_follows)   30
+# Identify users by Eggdrop handle / services account when available
+set conf(users.by_handle)     1
+set conf(users.by_account)    1
+
+# Anti-flood for commands: max N commands per S seconds per host
+set conf(cmd.flood_count)     5
+set conf(cmd.flood_secs)      15
+
+# ---- Narration -----------------------------------------------------------
+
+# Who may start narrations in a channel: op | voice | any
+set conf(narr.perm)           op
+set conf(narr.style)          normal
+set conf(narr.poll)           20
+set conf(narr.max_per_chan)   2
+set conf(narr.max_per_user)   1
+set conf(narr.max_total)      12
+# Automatic narration (!mdset autonarr add <team>): start this many
+# seconds before kick-off, so the intro and line-ups are included
+set conf(narr.auto_lead)      3600
+# How far ahead a match can be booked for narration (hours)
+set conf(narr.ahead_hours)    24
+# Default replay speed for "!md replay" / "!md demo"
+set conf(replay.speed)        30
+
+# ---- Hot matches, probabilities, videos ----------------------------------
+
+# Fetch pre-match odds at kick-off (one request per football match) so the
+# probability model and the upset/shock alerts can use them
+set conf(hot.odds)            1
+# A "flurry": this many goals within this many minutes
+set conf(hot.flurry_goals)    3
+set conf(hot.flurry_minutes)  10
+# Goal fest: total goals (announced before the 80th minute)
+set conf(hot.goalfest)        5
+# Upset: pre-match win probability at or below this, leading from minute N
+set conf(hot.upset)           0.20
+set conf(hot.upset_minute)    60
+# Neutral expected goals when no odds are available
+set conf(prob.prior_home)     1.45
+set conf(prob.prior_away)     1.15
+
+# Video highlights after full time
+set conf(videos.enabled)      1
+set conf(videos.max)          2
+# Seconds after full time when the match is re-checked for clips
+set conf(videos.checks)       {600 1800 3600 7200 14400}
+# Only post clips that look like highlights packages
+set conf(videos.only_highlights) 0
+
+# ---- Prediction game -----------------------------------------------------
+
+set conf(preds.exact)         3
+set conf(preds.diff)          2
+set conf(preds.outcome)       1
+set conf(preds.window_days)   7
+# Season start for the "season" leaderboard (default: 1 August)
+# set conf(preds.season_start) 2026-08-01
+
+# ---- Web dashboard -------------------------------------------------------
+
+# 0 disables it. Bind to 127.0.0.1 and use a reverse proxy to publish it.
+set conf(web.port)            0
+set conf(web.bind)            127.0.0.1
+# Optional access token: http://host:port/?token=SECRET
+set conf(web.token)           ""

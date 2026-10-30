@@ -1,0 +1,3 @@
+# Keep Unix line endings in the repository and on checkout (Eggdrop runs on Linux)
+* text=auto eol=lf
+*.json -diff linguist-generated
