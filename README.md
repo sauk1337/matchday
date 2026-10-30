@@ -123,7 +123,7 @@ Dentro de la carpeta de tu Eggdrop (por ejemplo `~/eggdrop`):
 
 ```sh
 cd ~/eggdrop/scripts
-git clone https://github.com/TU_USUARIO/matchday.git
+git clone https://github.com/sauk1337/matchday.git
 ```
 
 O descarga el ZIP desde GitHub y descomprímelo como `scripts/matchday`.
