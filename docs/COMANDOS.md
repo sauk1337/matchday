@@ -1,6 +1,6 @@
 # Matchday — guía completa de comandos
 
-[← Volver al README](../README.md)
+[English](COMMANDS.md) | **Español** · [← Volver al README](../README.es.md)
 
 ## Cómo se usan
 

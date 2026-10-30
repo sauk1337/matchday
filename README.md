@@ -1,14 +1,14 @@
-# Matchday — deporte en directo para Eggdrop
+# Matchday — live sports for Eggdrop
 
-Script para **Eggdrop** (Tcl puro) que convierte tu bot de IRC en un centro de
-resultados deportivos en directo: avisos de goles al instante, narración de
-partidos estilo radio, avisos personales, porra con clasificación,
-clasificaciones, goleadores, alineaciones, estadísticas, fichas de jugadores,
-probabilidad de victoria y un panel web.
+**English** | [Español](README.es.md)
 
-**Autosuficiente**: no necesita ninguna clave de API (usa los datos públicos de
-ESPN), ni servicios externos, ni base de datos. Opcionalmente se integra con
-API-Football.
+A pure-Tcl script for **Eggdrop** that turns your IRC bot into a live sports
+hub: instant goal alerts, radio-style match commentary, personal alerts,
+a prediction game with leaderboards, standings, top scorers, line-ups, stats,
+player profiles, win probabilities and a web dashboard.
+
+**Self-sufficient**: no API key needed (it uses ESPN's public data), no
+external services, no database. Optional API-Football integration.
 
 ```
 <Matchday> ▶ Kick-off: Real Madrid - Sevilla [LALIGA]
@@ -21,431 +21,433 @@ API-Football.
 <Matchday> ♛ Pool Real Madrid 3-1 Sevilla: exact (+3): pepe · right result: ana (+1) | ♛ leader: pepe 24 pts
 ```
 
-Narración en castellano (extracto real del Inter 3-4 Brujas):
+Live commentary (`!narrate inter`), real excerpt from Inter 3-4 Club Brugge:
 
 ```
-♪ ➜ 26' ¡AL PALO! ¡Nicolo Tresoldi estrella el balón en la madera!
-♪ ⚽ ¡GOOOL! Penalti transformado por Nicolo Tresoldi, 30'. Inter Milan 0-1 Club Brugge
-♪ ⚽ ¡GOOOL! ¡Todo igualado! Lautaro Martínez pone las tablas (44'). Inter Milan 1-1 Club Brugge (asistencia de Federico Dimarco)
-♪ ⚽ ¡GOOOL! ★ ¡HAT-TRICK de Nicolo Tresoldi! (74') Inter Milan 1-3 Club Brugge
-♪ ⏰ Cinco minutos para el final y el Club Brugge ya acaricia la victoria. Inter Milan 2-3 Club Brugge
-♪ ■ ¡FINAL DEL PARTIDO! Inter Milan 3-4 Club Brugge — ¡victoria del Club Brugge!
+♪ ➜ 26' WOODWORK! Nicolo Tresoldi hits the frame of the goal!
+♪ ⚽ GOAL! Nicolo Tresoldi converts the penalty! 30' Inter Milan 0-1 Club Brugge
+♪ ➜ Inter Milan are piling on the pressure: 3 shots in five minutes!
+♪ ⚽ GOAL! Inter Milan are back on terms thanks to Lautaro Martínez! 44' Inter Milan 1-1 Club Brugge (assist: Federico Dimarco)
+♪ ⚽ GOAL! Three! Nicolo Tresoldi takes the match ball home! 74' Inter Milan 1-3 Club Brugge
+♪ · Win probability: Inter Milan 2% · draw 8% · Club Brugge 90%
+♪ ⚽ GOAL! Lautaro Martínez pulls one back for Inter Milan (81'). Game on? Inter Milan 2-3 Club Brugge
+♪ ⏰ Final minutes: Club Brugge are hanging on to a slender lead. Inter Milan 2-3 Club Brugge
 ```
 
-Ficha de jugador y probabilidad:
+Player profiles and win probability:
 
 ```
-<usuario> !jugador mbappe
+<user> !player mbappe
 <Matchday> Kylian Mbappé · Real Madrid · Forward #10 · 27 y/o · France
 <Matchday> 2026-27 LALIGA: 7 goals, 2 assists, 8 starts, 44 shots (24 on target), ▮1
 <Matchday> Last 5: 4 G, 2 A · Next: Sevilla at Real Madrid (Sun 18/10 19:00, LALIGA)
-<usuario> !prob real madrid
+<user> !prob real madrid
 <Matchday> 19:00 AS Roma - Real Madrid [Champions League] · Win probability: AS Roma 26% · draw 24% · Real Madrid 50%
 ```
 
 ---
 
-## Índice
+## Contents
 
-- [Características](#características)
-- [Requisitos](#requisitos)
-- [Instalación paso a paso](#instalación-paso-a-paso)
-- [Configuración rápida de un canal](#configuración-rápida-de-un-canal)
-- [Comandos (resumen)](#comandos-resumen) · [Guía completa de comandos](docs/COMANDOS.md)
-- [Configuración del script (`matchday.conf`)](#configuración-del-script-matchdayconf)
-- [Narración automática de un equipo](#narración-automática-de-un-equipo)
-- [Panel web](#panel-web)
-- [API-Football (opcional)](#api-football-opcional)
-- [Modelo de probabilidad](#modelo-de-probabilidad-fútbol)
-- [Cómo funciona](#cómo-funciona)
-- [Pruebas](#pruebas)
-- [Añadir un idioma](#añadir-un-idioma)
-- [Problemas frecuentes](#problemas-frecuentes)
-- [Notas y licencia](#notas-y-licencia)
+- [Features](#features)
+- [Requirements](#requirements)
+- [Step-by-step installation](#step-by-step-installation)
+- [Quick channel setup](#quick-channel-setup)
+- [Commands (summary)](#commands-summary) · [Full command guide](docs/COMMANDS.md)
+- [Script configuration (`matchday.conf`)](#script-configuration-matchdayconf)
+- [Automatic commentary for a team](#automatic-commentary-for-a-team)
+- [Web dashboard](#web-dashboard)
+- [API-Football (optional)](#api-football-optional)
+- [Win probability model](#win-probability-model-football)
+- [How it works](#how-it-works)
+- [Tests](#tests)
+- [Adding a language](#adding-a-language)
+- [Troubleshooting](#troubleshooting)
+- [Notes and license](#notes-and-license)
 
 ---
 
-## Características
+## Features
 
-| Área | Qué hace |
+| Area | What it does |
 |---|---|
-| **Directo** | Goles con contexto (primer gol, empate, remontada, gol tardío, doblete, hat-trick, goleada), goles anulados por VAR, tarjetas, penaltis fallados, inicio, descanso, prórroga, tanda de penaltis, final, aplazado/suspendido. |
-| **Otros deportes** | NBA/WNBA/NCAA, NFL, NHL, MLB, tenis ATP/WTA, F1/IndyCar/NASCAR, golf, UFC, rugby, AFL. **113 competiciones** en catálogo + cualquier liga de ESPN por su código (`soccer/por.2`). |
-| **Narración** | Narrador con plantillas en 6 idiomas y cientos de variantes: paradas, palos, ocasiones, cambios, presión, tiempo añadido, tensión final, alineaciones, resumen de descanso y final. Estilos `full`, `normal`, `brief`. Al canal o por privado. **Automática** para los equipos que elijas. |
-| **Personal** | Cada usuario sigue equipos, competiciones, jugadores o partidos y recibe avisos por notice/privado con su idioma, zona horaria, tipos de evento, recordatorios, horas de silencio, "no molestar", resumen diario y "lo que te perdiste". |
-| **Información** | Clasificaciones, goleadores, próximos partidos, últimos resultados, detalle del partido, alineaciones, estadísticas, forma, cara a cara, partidos del día y en directo. |
-| **Jugadores** | Ficha (equipo, posición, edad, nacionalidad), estadísticas de la temporada por competición, últimos 5 partidos y próximo partido. Cualquier deporte. |
-| **Probabilidad** | Fútbol: modelo de Poisson ajustado a las cuotas previas y recalculado con marcador, minuto y expulsiones. NBA/NFL: probabilidad en directo de ESPN. |
-| **Partido caliente** | Avisos de lluvia de goles, festival de goles, remontada, sorpresa en curso y campanada final. |
-| **Vídeos** | Tras el final publica los vídeos de resumen (máx. 2 por partido). |
-| **Porra** | Pronósticos por canal que se cierran al empezar y se resuelven solos; puntos configurables, partidos destacados, ranking semanal, mensual y de temporada. |
-| **Idiomas** | Inglés por defecto + español, portugués, francés, italiano y alemán, por canal **y por usuario**. Los comandos funcionan en todos los idiomas (`!table`, `!clasificacion`, `!tabela`, `!classement`...). |
-| **Panel web** | Servidor HTTP integrado: directo, partidos del día, feed de eventos, ranking de la porra y estado. API JSON. |
-| **Robustez** | HTTP asíncrono (el bot nunca se bloquea), caché, backoff ante errores, datos persistentes con escritura atómica, recarga en caliente, antiflood, sin repetir eventos tras un reinicio. |
+| **Live** | Goals in context (opener, equaliser, comeback, late winner, brace, hat-trick, rout), VAR-disallowed goals, cards, missed penalties, kick-off, half-time, extra time, shoot-outs, full-time, postponed/suspended. |
+| **Other sports** | NBA/WNBA/NCAA, NFL, NHL, MLB, ATP/WTA tennis, F1/IndyCar/NASCAR, golf, UFC, rugby, AFL. **113 competitions** in the catalogue plus any ESPN league by its code (`soccer/por.2`). |
+| **Commentary** | Template-based commentator in 6 languages with hundreds of variants: saves, woodwork, chances, substitutions, pressure spells, added time, late tension, line-ups, half-time and full-time reports. Styles `full`, `normal`, `brief`. To a channel or in private. **Automatic** for the teams you choose. |
+| **Personal** | Each user follows teams, competitions, players or single matches and gets alerts by notice/private message in their own language and timezone, with event filters, reminders, quiet hours, do-not-disturb, a daily digest and "what you missed". |
+| **Info** | Standings, top scorers, upcoming fixtures, latest results, match details, line-ups, stats, form, head-to-head, today's matches and live matches. |
+| **Players** | Profile (team, position, age, nationality), season stats per competition, last 5 games and next game. Any sport. |
+| **Probability** | Football: Poisson model fitted to pre-match odds and updated with score, minute and red cards. NBA/NFL: ESPN's live win probability. |
+| **Hot matches** | Alerts for goal flurries, goal fests, comebacks, upsets in progress and shock results. |
+| **Videos** | Posts highlight clips after full time (max. 2 per match). |
+| **Prediction game** | Per-channel predictions that lock at kick-off and settle automatically; configurable points, featured matches, weekly/monthly/season leaderboards. |
+| **Languages** | English by default plus Spanish, Portuguese, French, Italian and German, per channel **and per user**. Commands work in every language (`!table`, `!clasificacion`, `!tabela`, `!classement`...). |
+| **Web dashboard** | Built-in HTTP server: live scores, today's matches, event feed, prediction leaderboard and bot status. JSON API. |
+| **Robustness** | Fully asynchronous HTTP (the bot never blocks), caching, back-off on errors, persistent data with atomic writes, hot reload, flood protection, no repeated events after a restart. |
 
 ---
 
-## Requisitos
+## Requirements
 
-- **Eggdrop 1.8.4 o superior** (recomendado 1.9 / 1.10) con **Tcl 8.6+**.
-- Para HTTPS, **una** de estas dos (el script detecta cuál hay):
-  - el paquete Tcl **tls** (recomendado), o
-  - el programa **curl** (casi siempre instalado).
+- **Eggdrop 1.8.4 or newer** (1.9 / 1.10 recommended) with **Tcl 8.6+**.
+- For HTTPS, **one** of these (the script detects which one is available):
+  - the Tcl **tls** package (recommended), or
+  - the **curl** program (almost always installed).
 
-No hace falta nada más: el parser JSON va incluido.
+Nothing else: the JSON parser is built in.
 
 ---
 
-## Instalación paso a paso
+## Step-by-step installation
 
-Las instrucciones son para Linux (Debian/Ubuntu). En otras distribuciones solo
-cambia el gestor de paquetes.
+These instructions are for Linux (Debian/Ubuntu). On other distributions only
+the package manager changes.
 
-### 1. Dependencias
+### 1. Dependencies
 
 ```sh
 sudo apt update
 sudo apt install tcl tcl-tls curl
 ```
 
-| Distribución | Paquete tls |
+| Distribution | tls package |
 |---|---|
 | Debian / Ubuntu | `sudo apt install tcl-tls` |
 | Fedora / RHEL | `sudo dnf install tcltls` |
 | Alpine | `apk add tcl-tls` |
 
-`tcl` sirve para ejecutar las pruebas fuera de Eggdrop. Si no puedes instalar
-`tls`, basta con `curl`.
+`tcl` is only needed to run the tests outside Eggdrop. If you can't install
+`tls`, `curl` is enough.
 
-### 2. Descargar el script
+### 2. Download the script
 
-Dentro de la carpeta de tu Eggdrop (por ejemplo `~/eggdrop`):
+Inside your Eggdrop folder (for example `~/eggdrop`):
 
 ```sh
 cd ~/eggdrop/scripts
 git clone https://github.com/sauk1337/matchday.git
 ```
 
-O descarga el ZIP desde GitHub y descomprímelo como `scripts/matchday`.
-Lo importante es que exista `scripts/matchday/matchday.tcl`.
+Or download the ZIP from GitHub and extract it as `scripts/matchday`.
+What matters is that `scripts/matchday/matchday.tcl` exists.
 
-### 3. Comprobar que funciona (opcional, recomendado)
+### 3. Check that it works (optional, recommended)
 
 ```sh
 cd ~/eggdrop/scripts/matchday
-tclsh tests/run_all.tcl          # pruebas sin conexión: debe acabar en "All tests passed."
-tclsh tests/run_all.tcl live     # además, prueba real contra ESPN (1-2 minutos)
+tclsh tests/run_all.tcl          # offline tests: must end with "All tests passed."
+tclsh tests/run_all.tcl live     # plus a real check against ESPN (1-2 minutes)
 ```
 
-En la prueba `live`, la línea `HTTP: transport ...` del final indica si usa
-`tls` o `curl`.
+In the `live` check, the `HTTP: transport ...` line at the end tells you whether
+it uses `tls` or `curl`.
 
-### 4. Configuración del script (opcional)
+### 4. Script configuration (optional)
 
 ```sh
 cp matchday.conf.example matchday.conf
 nano matchday.conf
 ```
 
-Todo tiene un valor por defecto. Lo más habitual es cambiar idioma y zona
-horaria:
+Everything has a default. The usual changes are language and timezone:
 
 ```tcl
-set conf(lang.default)  es
-set conf(tz.default)    Europe/Madrid
+set conf(lang.default)  en
+set conf(tz.default)    Europe/London
 ```
 
-`matchday.conf` está en `.gitignore`: tus ajustes (y una posible clave de
-API-Football) nunca se suben al repositorio.
+`matchday.conf` is in `.gitignore`: your settings (and an API-Football key, if
+you add one) are never committed.
 
-### 5. Cargarlo en Eggdrop
+### 5. Load it in Eggdrop
 
-Al final de `eggdrop.conf`:
+At the end of `eggdrop.conf`:
 
 ```tcl
 source scripts/matchday/matchday.tcl
 ```
 
-La ruta es relativa a la carpeta desde la que arranca el bot. Después, en la
-partyline (`/dcc chat TuBot`):
+The path is relative to the folder the bot starts from. Then, on the partyline
+(`/dcc chat YourBot`):
 
 ```
 .rehash
 ```
 
-En el log debe aparecer una línea de Matchday con la versión, el número de
-competiciones y los idiomas cargados.
+The log should show a Matchday line with the version, the number of
+competitions and the loaded languages.
 
-### 6. Activarlo en un canal
+### 6. Enable it in a channel
 
-En la partyline:
-
-```
-.chanset #futbol +matchday
-```
-
-Y sigue con la [configuración rápida del canal](#configuración-rápida-de-un-canal).
-
-### 7. Probarlo
+On the partyline:
 
 ```
-!md demo            reproduce acelerado un partido ya jugado (requiere flag +m)
-!hoy
-!jugador mbappe
+.chanset #football +matchday
 ```
 
-### Actualizar a una versión nueva
+Then continue with the [quick channel setup](#quick-channel-setup).
+
+### 7. Try it
+
+```
+!md demo            replays a finished match at high speed (needs the +m flag)
+!today
+!player mbappe
+```
+
+### Updating to a new version
 
 ```sh
 cd ~/eggdrop/scripts/matchday
 git pull
 ```
 
-y `.rehash` (o `!md reload`). Tu `matchday.conf` y la carpeta `data/` no se tocan.
+and `.rehash` (or `!md reload`). Your `matchday.conf` and the `data/` folder are
+left untouched.
 
 ---
 
-## Configuración rápida de un canal
+## Quick channel setup
 
-Como **op** en el canal:
-
-```
-!mdset lang es                              idioma del canal
-!mdset tz Europe/Madrid                     zona horaria
-!mdset leagues add laliga, champions        competiciones que se anuncian
-!mdset                                      ver la configuración
-```
-
-Opcional:
+As a channel **op**:
 
 ```
-!mdset events -videos +cards                qué avisos salen
-!mdset remind 15                            aviso 15 min antes de cada partido
-!mdset digest 10:00                         resumen diario de la jornada
-!mdset teams add boca juniors               un equipo aunque su liga no esté
-!mdset autonarr add athletic club           narrar SIEMPRE los partidos de ese equipo
-!mdset narrstyle full                       estilo de esa narración automática
+!mdset lang en                              channel language
+!mdset tz Europe/London                     timezone
+!mdset leagues add premier, champions       competitions to announce
+!mdset                                      show the configuration
 ```
 
-Para ver las competiciones disponibles: `!ligas` o `!ligas argentina`.
+Optional:
+
+```
+!mdset events -videos +cards                which alerts are posted
+!mdset remind 15                            reminder 15 min before each match
+!mdset digest 10:00                         daily round-up of the day's matches
+!mdset teams add boca juniors               a team even if its league isn't added
+!mdset autonarr add arsenal                 ALWAYS commentate that team's matches
+!mdset narrstyle full                       style of the automatic commentary
+```
+
+To see the available competitions: `!leagues` or `!leagues argentina`.
 
 ---
 
-## Comandos (resumen)
+## Commands (summary)
 
-Los comandos tienen nombre en inglés y alias en cada idioma; todos funcionan
-siempre. Por privado al bot se escriben sin `!`.
+Every command has an English name plus aliases in each language, and they all
+work everywhere. In private messages to the bot, drop the `!`.
 
-| Inglés | Castellano | Qué hace |
+| Command | What it does |
+|---|---|
+| `!help [command]` | Command list or help for one command |
+| `!live` | Matches in play |
+| `!today [league\|team] [date]` | Today's matches (`tomorrow`, `25/12`...) |
+| `!match <team>` | Details of a team's match |
+| `!next` / `!last` | Upcoming fixtures / latest results |
+| `!table` | Standings |
+| `!scorers` | Top scorers or assists |
+| `!lineup` / `!stats` | Line-ups / match stats |
+| `!form` / `!h2h` | Recent form / head-to-head |
+| `!player <name>` | Player profile |
+| `!prob <team>` | Win probability |
+| `!leagues` | Available competitions |
+| `!follow` / `!unfollow` / `!follows` | Personal alerts |
+| `!set` / `!prefs` / `!lang` / `!tz` | Personal settings |
+| `!narrate` | Live commentary of a match |
+| `!predict` / `!preds` / `!porra` / `!ranking` | Prediction game |
+| `!mdset` | Channel configuration (ops) |
+| `!md` | Administration (`+m` flag) |
+| `!more` / `!about` | Next page / version |
+
+👉 **[Full command guide with examples and every option](docs/COMMANDS.md)**
+
+---
+
+## Script configuration (`matchday.conf`)
+
+`matchday.conf.example` is commented line by line. The most useful options:
+
+| Option | Default | Purpose |
 |---|---|---|
-| `!help` | `!ayuda` | Lista de comandos o ayuda de uno |
-| `!live` | `!directo` | Partidos en juego |
-| `!today` | `!hoy` | Partidos del día (`mañana`, `25/12`...) |
-| `!match` | `!partido` | Detalle del partido de un equipo |
-| `!next` / `!last` | `!proximo` / `!ultimo` | Próximos partidos / últimos resultados |
-| `!table` | `!clasificacion` | Clasificación |
-| `!scorers` | `!goleadores` | Goleadores o asistentes |
-| `!lineup` / `!stats` | `!alineacion` / `!estadisticas` | Alineaciones / estadísticas |
-| `!form` / `!h2h` | `!forma` / `!cara` | Racha / cara a cara |
-| `!player` | `!jugador` | Ficha de un jugador |
-| `!prob` | `!probabilidad` | Probabilidad de victoria |
-| `!leagues` | `!ligas` | Competiciones disponibles |
-| `!follow` / `!unfollow` / `!follows` | `!seguir` / `!dejar` / `!siguiendo` | Avisos personales |
-| `!set` / `!prefs` / `!lang` / `!tz` | `!ajustar` / `!preferencias` / `!idioma` / `!zona` | Ajustes personales |
-| `!narrate` | `!narrar` | Narración de un partido |
-| `!predict` / `!preds` / `!porra` / `!ranking` | `!pronostico` / `!pronosticos` / `!quiniela` / `!clasificacionporra` | Porra |
-| `!mdset` | `!configurar` | Configuración del canal (ops) |
-| `!md` | | Administración (flag `+m`) |
-| `!more` / `!about` | `!mas` / `!acerca` | Siguiente página / versión |
+| `lang.default` | `en` | Default language (`en es pt fr it de`) |
+| `tz.default` | `UTC` | Default timezone (`Europe/London`) |
+| `cmd.prefix` | `!` | Command prefix |
+| `http.transport` | `auto` | `auto`, `tls` or `curl` |
+| `poll.live` / `poll.idle` | `30` / `900` | Seconds between polls with live matches / with nothing on |
+| `chan.events` | all but `cards` | Default alerts for a new channel |
+| `out.style` / `out.symbols` | `full` / `unicode` | Colours and symbols |
+| `out.max_per_minute` | `20` | Flood control: lines per minute per target |
+| `narr.perm` | `op` | Who may start commentary in a channel |
+| `narr.auto_lead` | `3600` | Seconds before kick-off when automatic commentary starts |
+| `hot.odds` | `1` | Fetch odds at the start of each football match (probability and upset alerts) |
+| `videos.enabled` | `1` | Post highlight clips |
+| `preds.exact` / `diff` / `outcome` | `3` / `2` / `1` | Prediction points |
+| `web.port` | `0` | Web dashboard port (0 = off) |
+| `apifootball.key` | empty | Optional API-Football key |
+| `admin.flags` | `m\|-` | Eggdrop flags for `!md` |
 
-👉 **[Guía completa de comandos con ejemplos y todas las opciones](docs/COMANDOS.md)**
+Almost everything can also be changed at runtime: `!md conf <key> <value>`.
 
 ---
 
-## Configuración del script (`matchday.conf`)
-
-`matchday.conf.example` está comentado línea a línea. Las opciones más útiles:
-
-| Opción | Por defecto | Para qué |
-|---|---|---|
-| `lang.default` | `en` | Idioma por defecto (`en es pt fr it de`) |
-| `tz.default` | `UTC` | Zona horaria por defecto (`Europe/Madrid`) |
-| `cmd.prefix` | `!` | Prefijo de comandos |
-| `http.transport` | `auto` | `auto`, `tls` o `curl` |
-| `poll.live` / `poll.idle` | `30` / `900` | Segundos entre consultas con partidos en juego / sin partidos |
-| `chan.events` | todo menos `cards` | Avisos por defecto de un canal nuevo |
-| `out.style` / `out.symbols` | `full` / `unicode` | Colores y símbolos |
-| `out.max_per_minute` | `20` | Antiflood: líneas por minuto y destino |
-| `narr.perm` | `op` | Quién puede narrar en un canal |
-| `narr.auto_lead` | `3600` | Segundos antes del inicio en que arranca la narración automática |
-| `hot.odds` | `1` | Descargar cuotas al inicio de cada partido de fútbol (probabilidad y avisos de sorpresa) |
-| `videos.enabled` | `1` | Publicar vídeos de resumen |
-| `preds.exact` / `diff` / `outcome` | `3` / `2` / `1` | Puntos de la porra |
-| `web.port` | `0` | Puerto del panel web (0 = desactivado) |
-| `apifootball.key` | vacío | Clave opcional de API-Football |
-| `admin.flags` | `m\|-` | Flags de Eggdrop para `!md` |
-
-Casi todo se puede cambiar también en caliente: `!md conf <clave> <valor>`.
-
----
-
-## Narración automática de un equipo
+## Automatic commentary for a team
 
 ```
-!mdset autonarr add athletic club
+!mdset autonarr add arsenal
 !mdset narrstyle full
 ```
 
-- Empieza sola `narr.auto_lead` segundos antes del inicio (1 h por defecto), con
-  previa y alineaciones, en **todas** las competiciones del equipo.
-- Mientras se narra un partido, sus avisos normales no se repiten en ese canal.
-- Si un op escribe `!narrate off`, ese partido no se vuelve a narrar; el
-  siguiente sí.
-- Si el bot se reinicia durante el partido, retoma la narración.
-- `!mdset autonarr del <equipo>` / `!mdset autonarr clear` para quitarlo.
+- It starts by itself `narr.auto_lead` seconds before kick-off (1 h by default),
+  with the preview and line-ups, in **every** competition the team plays.
+- While a match is being commentated, its regular alerts aren't repeated in that
+  channel.
+- If an op types `!narrate off`, that match won't be restarted; the next one will.
+- If the bot restarts mid-match, the commentary resumes.
+- `!mdset autonarr del <team>` / `!mdset autonarr clear` to remove it.
 
 ---
 
-## Panel web
+## Web dashboard
 
-En `matchday.conf`:
+In `matchday.conf`:
 
 ```tcl
 set conf(web.port)  8088
 set conf(web.bind)  127.0.0.1
-set conf(web.token) "cambia-esto"     ;# opcional: http://host:8088/?token=cambia-esto
+set conf(web.token) "change-me"     ;# optional: http://host:8088/?token=change-me
 ```
 
-Pestañas: Directo, Hoy, Feed de eventos, Porra y Estado. Se actualiza cada 15 s,
-tiene modo oscuro y funciona en el móvil. API JSON: `/api/live`,
-`/api/ranking?chan=%23canal&period=season`, `/api/status`, `/api/events`.
+Tabs: Live, Today, Event feed, Predictions and Status. It refreshes every 15 s,
+has a dark mode and works on mobile. JSON API: `/api/live`,
+`/api/ranking?chan=%23channel&period=season`, `/api/status`, `/api/events`.
 
-Es de solo lectura. Para publicarlo en Internet, déjalo en `127.0.0.1` y ponlo
-detrás de nginx o caddy con HTTPS.
+It is read-only. To publish it on the Internet, keep it on `127.0.0.1` and put it
+behind nginx or caddy with HTTPS.
 
 ---
 
-## API-Football (opcional)
+## API-Football (optional)
 
 ```tcl
-set conf(apifootball.key)  "tu-clave"
-set conf(apifootball.mode) extras    ;# o primary
+set conf(apifootball.key)  "your-key"
+set conf(apifootball.mode) extras    ;# or primary
 ```
 
-- `extras` (recomendado): ESPN sigue siendo la fuente; API-Football añade el
-  **cara a cara histórico**. Cabe en el plan gratuito (100 peticiones/día).
-- `primary`: usa API-Football para los marcadores de fútbol (necesita plan de
-  pago). Si falla, vuelve a ESPN.
+- `extras` (recommended): ESPN stays the source; API-Football adds the
+  **historical head-to-head**. Fits the free plan (100 requests/day).
+- `primary`: uses API-Football for football scoreboards (needs a paid plan).
+  Falls back to ESPN on errors.
 
-La clave va solo en `matchday.conf`, que no se sube a GitHub.
-
----
-
-## Modelo de probabilidad (fútbol)
-
-1. Antes del partido se leen las cuotas 1X2, se quita el margen de la casa y se
-   ajustan los goles esperados de cada equipo para que un modelo de Poisson
-   reproduzca esas probabilidades.
-2. Durante el partido, los goles esperados que quedan se escalan por el tiempo
-   restante (con un añadido típico) y se corrigen por expulsiones (−28 % para el
-   equipo con diez, +22 % para el rival).
-3. Se combina con el marcador actual: P(local / empate / visitante).
-
-Ejemplo real (Inter–Brujas, Inter favorito al 78 %): tras el penalti del Brujas
-al 30' baja al 43 %; con el empate del 44' sube al 63 %. Sin cuotas se usan
-valores neutros y se indica "sin cuotas".
+The key only goes in `matchday.conf`, which is never committed.
 
 ---
 
-## Cómo funciona
+## Win probability model (football)
+
+1. Before the match, the 1X2 odds are read, the bookmaker margin is removed and
+   each team's expected goals are fitted so that a Poisson model reproduces
+   those probabilities.
+2. During the match, the remaining expected goals are scaled by the time left
+   (including typical added time) and adjusted for red cards (−28 % for the team
+   down to ten, +22 % for the opponent).
+3. This is combined with the current score: P(home / draw / away).
+
+Real example (Inter–Club Brugge, Inter 78 % favourites): after Brugge's
+30th-minute penalty it drops to 43 %; Inter's 44th-minute equaliser brings it back
+to 63 %. Without odds, neutral values are used and the output says so.
+
+---
+
+## How it works
 
 ```
               ┌──────────────── providers ───────────────┐
- ESPN ─────▶  │ espn.tcl  apifootball.tcl  (normalizan)  │
+ ESPN ─────▶  │ espn.tcl  apifootball.tcl  (normalise)   │
               └──────────────────┬────────────────────────┘
                                  ▼
-  poller.tcl  sondeo adaptativo: 30 s con partidos en juego, 60 s cerca del
-              inicio, duerme hasta poco antes del siguiente partido
+  poller.tcl  adaptive polling: 30 s with live matches, 60 s near kick-off,
+              sleeps until shortly before the next match
                                  ▼
-  diff.tcl    compara instantáneas → eventos (gol, VAR, tarjeta, descanso...)
-              con memoria persistente: nunca repite un gol tras un reinicio
+  diff.tcl    compares snapshots → events (goal, VAR, card, half-time...)
+              with persistent memory: never repeats a goal after a restart
                                  ▼
-  dispatch    ─▶ canales (filtros por liga/equipo/evento)
-              ─▶ usuarios (seguimientos, idioma, silencio, notice/privado)
-              ─▶ hooks: narrador, porra, partido caliente, vídeos, panel web
+  dispatch    ─▶ channels (league/team/event filters)
+              ─▶ users (follows, language, quiet hours, notice/private)
+              ─▶ hooks: commentator, predictions, hot matches, videos, web
                                  ▼
-  out.tcl     colores por rol, unicode/ascii, troceo por bytes, fusión de
-              eventos simultáneos, antiflood, !more
+  out.tcl     colours by role, unicode/ascii, byte-safe wrapping, merging of
+              simultaneous events, flood control, !more
 ```
 
-Solo se consultan las competiciones que alguien necesita (canales, usuarios,
-equipos seguidos que juegan pronto, narraciones, porras abiertas).
+Only the competitions someone needs are polled (channels, users, followed teams
+playing soon, commentary sessions, open predictions).
 
-### Estructura
+### Layout
 
 ```
-matchday.tcl            cargador (recarga limpia con .rehash / !md reload)
-matchday.conf.example   configuración comentada (copiar a matchday.conf)
+matchday.tcl            loader (clean reload with .rehash / !md reload)
+matchday.conf.example   commented configuration (copy to matchday.conf)
 lib/        util, json, http (tls/curl), store, i18n, out
 engine/     catalog, poller, diff, render, dispatch, teams, prob
 providers/  espn, apifootball
 features/   commands, info, usercmds, admin, chan, subs, narrator,
             predictions, replay, player, hot, videos, web
 lang/       en es pt fr it de
-web/        index.html (panel)
-tests/      simulador de Eggdrop + 157 pruebas con datos reales grabados
-docs/       COMANDOS.md (guía completa de comandos)
-data/       (se crea sola) usuarios, porra, estado, índice de equipos
+web/        index.html (dashboard)
+tests/      Eggdrop simulator + 157 tests with real recorded data
+docs/       COMMANDS.md / COMANDOS.md (full command guide)
+data/       (created at runtime) users, predictions, state, team index
 ```
 
 ---
 
-## Pruebas
+## Tests
 
 ```sh
-tclsh tests/run_all.tcl                          # batería completa sin conexión
-tclsh tests/run_all.tcl live                     # + comprobación contra la API real
-tclsh -encoding utf-8 tests/demo_output.tcl es   # ver un partido simulado en el canal
+tclsh tests/run_all.tcl                          # full offline suite
+tclsh tests/run_all.tcl live                     # + a check against the real API
+tclsh -encoding utf-8 tests/demo_output.tcl en   # watch a simulated match in a channel
 ```
 
-Las pruebas usan un simulador de Eggdrop (`tests/eggstub.tcl`) y respuestas
-reales de ESPN grabadas en `tests/fixtures/`.
+The tests use an Eggdrop simulator (`tests/eggstub.tcl`) and real ESPN responses
+recorded in `tests/fixtures/`.
 
 ---
 
-## Añadir un idioma
+## Adding a language
 
-1. Copia `lang/en.tcl` a `lang/xx.tcl`.
-2. Cambia la primera línea (`::md::i18n::lang xx Name NativeName`).
-3. Traduce los textos y añade alias de comandos en `::md::i18n::cmds`.
-4. `.rehash` y `!mdset lang xx`.
+1. Copy `lang/en.tcl` to `lang/xx.tcl`.
+2. Change the first line (`::md::i18n::lang xx Name NativeName`).
+3. Translate the strings and add command aliases in `::md::i18n::cmds`.
+4. `.rehash` and `!mdset lang xx`.
 
-Lo que no traduzcas cae automáticamente al inglés. Los plurales se escriben
-como `%{n} %{n:gol|goles}`.
+Anything left untranslated falls back to English. Plurals are written as
+`%{n} %{n:goal|goals}`.
 
 ---
 
-## Problemas frecuentes
+## Troubleshooting
 
-| Síntoma | Solución |
+| Symptom | Fix |
 |---|---|
-| `No tls package and no curl found` | Instala `tcl-tls` o `curl` |
-| No anuncia nada | `.chanset #canal +matchday`, que `!mdset` muestre ligas y que `!md status` no tenga errores |
-| `!md` no responde | Tu usuario necesita `+m`: `.chattr TuNick +m` |
-| Las horas salen mal | `!mdset tz Europe/Madrid` (canal) o `!tz ...` (usuario) |
-| El canal tiene modo `+c` | El bot lo detecta y envía sin colores; también `!mdset style bold` |
-| Se ven símbolos raros | `!mdset symbols ascii` |
-| `error reading package index file .../ttkthemes/...` al probar | Avisos de paquetes gráficos de Tk instalados en el sistema; inofensivos |
-| Error al cargar | `.console +d` en la partyline, luego `.rehash`, y revisa el mensaje |
+| `No tls package and no curl found` | Install `tcl-tls` or `curl` |
+| Nothing is announced | Check `.chanset #channel +matchday`, that `!mdset` lists leagues and that `!md status` shows no errors |
+| `!md` doesn't answer | Your user needs `+m`: `.chattr YourNick +m` |
+| Wrong times | `!mdset tz Europe/London` (channel) or `!tz ...` (user) |
+| The channel is `+c` | The bot detects it and sends without colours; also `!mdset style bold` |
+| Odd symbols | `!mdset symbols ascii` |
+| `error reading package index file .../ttkthemes/...` when testing | Warnings from graphical Tk packages installed on the system; harmless |
+| Error on load | `.console +d` on the partyline, then `.rehash`, and read the message |
 
 ---
 
-## Notas y licencia
+## Notes and license
 
-- ESPN no publica una API oficial: el script usa los mismos endpoints públicos
-  que su web, estables desde hace años pero que podrían cambiar. Toda la lectura
-  está aislada en `providers/espn.tcl`. Este proyecto no está afiliado ni
-  respaldado por ESPN ni por API-Football.
-- La narración se basa en los eventos y jugadas que publica el proveedor; si una
-  jugada no aparece en sus datos, no se narra.
-- Licencia MIT: ver [LICENSE](LICENSE).
+- ESPN has no official public API: the script uses the same public endpoints as
+  their website, stable for years but subject to change. All parsing is isolated
+  in `providers/espn.tcl`. This project is not affiliated with or endorsed by
+  ESPN or API-Football.
+- Commentary is built from the events and plays the provider publishes; if a play
+  isn't in their data, it isn't narrated.
+- MIT license: see [LICENSE](LICENSE).
